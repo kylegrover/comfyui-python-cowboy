@@ -1,5 +1,7 @@
 ### 🐍🤠
 
+⚠ ready soon, there's uno bug left to squish ⚠
+
 run python code in comfyui
 
 uses codemirror for nice syntax highlighting
