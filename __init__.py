@@ -22,10 +22,13 @@ class PythonScript:
             "B": (any, {}),
             "C": (any, {}),
             "D": (any, {}),
-            "text": ("PYTHON_STRING", {"default": DEFAULT_SCRIPT, "multiline": True}),
+            # "text": ("PYTHON_STRING", {"default": DEFAULT_SCRIPT, "multiline": True}),
+            "text": ("STRING", {"default": DEFAULT_SCRIPT, "multiline": True}),
         }}
 
     def run_script(self, text=DEFAULT_SCRIPT, A=None, B=None, C=None, D=None):
+        print("Running script:")
+        print(text)
         SCRIPT = text if text is not None and len(text) > 0 else DEFAULT_SCRIPT
         try:
             r = compile(SCRIPT, "<string>", "exec")

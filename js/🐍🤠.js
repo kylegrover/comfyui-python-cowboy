@@ -12,71 +12,66 @@ class PythonEditorWidget {
         this.editor = null;
         this.element = null;
         this.resourcesLoaded = false;
-        
-        // Debug constructor state
-        // console.log("🐍🤠 Initial state:", {
-        //     name: this.name,
-        //     type: this.type,
-        //     options: this.options,
-        //     value: this.value
-        // });
     }
 
-    async draw(ctx, node, widget_width, widget_y) {
-        // console.log("🐍🤠 Drawing widget start");
-        
-        try {
-            if (!this.element) {
-                // console.log("🐍🤠 Creating editor elements");
-                
-                const container = document.createElement('div');
-                container.style.width = '100%';
-                // container.style.height = '300px';
-                container.style.border = '1px solid #666';
-                container.style.borderRadius = '4px';
-                container.style.position = 'relative';
-                
-                const editorDiv = document.createElement('div');
-                editorDiv.style.height = '100%';
-                container.appendChild(editorDiv);
-                // console.log("🐍🤠 Editor div created");
+    draw(ctx, node, widget_width, widget_y) {
+        return new Promise(async (resolve, reject) => {
+            // console.log("🐍🤠 Drawing widget start");
+            
+            try {
+                if (!this.element) {
+                    // console.log("🐍🤠 Creating editor elements");
+                    
+                    const container = document.createElement('div');
+                    container.style.width = '100%';
+                    // container.style.height = '300px';
+                    container.style.border = '1px solid #666';
+                    container.style.borderRadius = '4px';
+                    container.style.position = 'relative';
+                    
+                    const editorDiv = document.createElement('div');
+                    editorDiv.style.height = '100%';
+                    container.appendChild(editorDiv);
+                    // console.log("🐍🤠 Editor div created");
 
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.style.position = 'absolute';
-                errorDiv.style.bottom = '0';
-                errorDiv.style.left = '0';
-                errorDiv.style.right = '0';
-                errorDiv.style.background = 'rgba(255, 0, 0, 0.1)';
-                errorDiv.style.color = '#ff4444';
-                errorDiv.style.padding = '4px';
-                errorDiv.style.fontSize = '12px';
-                errorDiv.style.display = 'none';
-                container.appendChild(errorDiv);
-                // console.log("🐍🤠 Error div created");
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.style.position = 'absolute';
+                    errorDiv.style.bottom = '0';
+                    errorDiv.style.left = '0';
+                    errorDiv.style.right = '0';
+                    errorDiv.style.background = 'rgba(255, 0, 0, 0.1)';
+                    errorDiv.style.color = '#ff4444';
+                    errorDiv.style.padding = '4px';
+                    errorDiv.style.fontSize = '12px';
+                    errorDiv.style.display = 'none';
+                    container.appendChild(errorDiv);
+                    // console.log("🐍🤠 Error div created");
 
-                this.element = node.addDOMWidget("pythoneditor", "div", container);
-                // console.log("🐍🤠 DOM widget added");
+                    this.element = node.addDOMWidget("pythoneditor", "div", container);
+                    // console.log("🐍🤠 DOM widget added");
 
-                try {
-                    await this.setupEditor(editorDiv, errorDiv);
-                } catch (setupError) {
-                    console.error("🐍🤠 Error during editor setup:", setupError);
-                    // Try to display error in the UI
-                    errorDiv.textContent = `Editor setup failed: ${setupError.message}`;
-                    errorDiv.style.display = 'block';
+                    try {
+                        await this.setupEditor(editorDiv, errorDiv);
+                        resolve();  // Resolve the promise once editor is setup
+                    } catch (setupError) {
+                        console.error("🐍🤠 Error during editor setup:", setupError);
+                        // Try to display error in the UI
+                        errorDiv.textContent = `Editor setup failed: ${setupError.message}`;
+                        errorDiv.style.display = 'block';
+                    }
                 }
-            }
 
-            if (this.editor) {
-                // console.log("🐍🤠 Refreshing editor");
-                requestAnimationFrame(() => {
-                    this.editor.refresh();
-                });
+                if (this.editor) {
+                    // console.log("🐍🤠 Refreshing editor");
+                    requestAnimationFrame(() => {
+                        this.editor.refresh();
+                    });
+                }
+            } catch (error) {
+                console.error("🐍🤠 Error in draw method:", error);
             }
-        } catch (error) {
-            console.error("🐍🤠 Error in draw method:", error);
-        }
+        });
     }
 
     async setupEditor(editorDiv, errorDiv) {
@@ -124,7 +119,7 @@ class PythonEditorWidget {
             // console.log("🐍🤠 CodeMirror instance created successfully");
 
             this.editor.on('change', () => {
-                // console.log("🐍🤠 Editor content changed");
+                console.log("🐍🤠 Editor content changed");
                 this.value = this.editor.getValue();
             });
 
@@ -206,20 +201,23 @@ app.registerExtension({
     async setup() {
         // console.log("Setting up 🐍🤠 extension");
     },
-    getCustomWidgets() {
-        return {
-            PYTHON_STRING: (node, inputName, inputData) => {
-                const widget = new PythonEditorWidget(inputName, inputData);
-                // Call draw method manually if needed
-                widget.draw(widget, node, 400, 100);
-                return {
-                    widget,
-                    minWidth: 400,
-                    minHeight: 100,
-                };
-            }
-        };
-    }
+getCustomWidgets() {
+    return {
+        PYTHON_STRING: (node, inputName, inputData) => {
+            const widget = new PythonEditorWidget(inputName, inputData);
+
+            widget.draw(widget, node, 400, 100).catch(error => {
+                console.error("Failed to initialize widget editor:", error);
+            });
+
+            return {
+                widget,
+                minWidth: 400,
+                minHeight: 100,
+            };
+        }
+    };
+}
 });
 
 // console.log("🐍🤠 extension registration complete");
